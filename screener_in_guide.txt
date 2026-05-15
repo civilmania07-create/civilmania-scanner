@@ -1,0 +1,148 @@
+══════════════════════════════════════════════════════════════════════════
+CIVILMANIA SCANNER — SCREENER.IN SETUP GUIDE
+══════════════════════════════════════════════════════════════════════════
+
+STEP 1: CREATE A FREE SCREENER.IN ACCOUNT
+─────────────────────────────────────────
+Go to: https://www.screener.in
+Click "Sign Up" → use your email → verify → login
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 2: PASTE THE SCREENER QUERY
+──────────────────────────────────
+Go to: Screens → Create New Screen
+
+Paste this query exactly:
+
+────────────────────────────────────────
+Sales growth > 15 AND
+Profit growth > 20 AND
+Return on equity > 15 AND
+Return on capital employed > 15 AND
+Debt to equity < 0.5 AND
+Interest Coverage > 3.5 AND
+Market Capitalization > 2000 AND
+Market Capitalization < 25000 AND
+Promoter holding > 40 AND
+Pledged percentage < 5
+────────────────────────────────────────
+
+This gives you the filtered universe (typically 40–120 stocks).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 3: SELECT COLUMNS TO EXPORT
+──────────────────────────────────
+Click "Columns" in the screen → add these columns:
+
+IDENTITY:
+  ✓ Name
+  ✓ NSE Symbol
+
+GROWTH:
+  ✓ Sales growth (Annual)
+  ✓ Profit growth (Annual)
+  ✓ EPS growth (Annual)
+  ✓ Sales growth (Quarterly YoY)
+
+QUALITY:
+  ✓ ROCE (Return on Capital Employed)
+  ✓ ROE (Return on Equity)
+  ✓ OPM (Operating Profit Margin)
+
+FINANCIAL STRENGTH:
+  ✓ PEG Ratio
+  ✓ Debt to Equity
+  ✓ Interest Coverage Ratio
+  ✓ Price to Earnings
+
+OWNERSHIP:
+  ✓ Promoter holding
+  ✓ FII holding
+  ✓ DII holding
+  ✓ Pledged percentage
+
+VALUATION:
+  ✓ Market Capitalization
+  ✓ Price to Book Value
+  ✓ Price to Earnings
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 4: EXPORT AS CSV
+──────────────────────
+Click "Export to Excel/CSV" button (top right of results)
+
+Save as: screener_export_DDMMYYYY.csv
+Put this file in: backend/data/ folder
+
+The Python scraper will auto-read this file when you run it.
+OR the scraper can fetch directly from Screener.in's API (see scraper.py)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 5: ADDITIONAL DATA SOURCES (for complete scoring)
+────────────────────────────────────────────────────────
+
+DELIVERY % DATA (NSE):
+  Free, no login needed
+  URL pattern: https://www.nseindia.com/report-detail/eq_security
+  → The scraper (fetch_nse_delivery) handles this automatically
+
+RS RATING (Yahoo Finance):
+  Calculated internally by comparing stock return vs Nifty
+  → The scraper (fetch_yahoo) handles this automatically
+
+PIOTROSKI SCORE:
+  Calculated from Screener.in fundamentals
+  → The scraper estimates this from available data
+
+ALTMAN Z-SCORE:
+  Calculated from balance sheet ratios
+  → The scraper computes an approximation
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 6: FREQUENCY OF REFRESH
+──────────────────────────────
+
+RECOMMENDED SCHEDULE:
+  Fundamentals (Screener.in): Weekly on Monday morning
+  Price/Delivery/Volume (NSE): Daily at 8:00 AM weekdays
+  RS Rating: Daily at 8:00 AM weekdays
+  Shareholding (FII/DII): Quarterly (after BSE filings)
+
+The cron job in the DEPLOYMENT GUIDE handles daily auto-refresh.
+For shareholding, you'll manually update quarterly.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 7: SAVE SCREEN IN SCREENER.IN
+────────────────────────────────────
+Click "Save" → name it "CivilMania Growth Universe"
+This screen auto-refreshes every time Screener.in updates data.
+You can check it weekly to see new stocks entering/exiting.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SCREENER.IN URL for direct share:
+  https://www.screener.in/screens/  (save with above query)
+
+CSV column mapping to Supabase field names:
+  "Sales growth"               → sales_growth
+  "Profit growth"              → profit_growth  
+  "EPS"                        → eps_growth (calculate YoY)
+  "Return on capital employed" → roce
+  "Return on equity"           → roe
+  "Operating profit margin"    → opm
+  "PEG Ratio"                  → peg
+  "Debt to equity"             → debt_equity
+  "Interest Coverage"          → icr
+  "Market Capitalization"      → market_cap
+  "Promoter holding" + 
+  "FII Holding" + 
+  "DII Holding"                → smart_money (sum of three)
+  "Pledged percentage"         → promoter_pledge
+
+══════════════════════════════════════════════════════════════════════════
